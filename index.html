@@ -1,47 +1,115 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Courbe Bitcoin</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Prix des Cryptomonnaies avec Effet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 60%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .up {
+            color: green;
+            font-weight: bold;
+        }
+        .down {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="bitcoinChart" width="400" height="200"></canvas>
-    <script>
-        const ctx = document.getElementById('bitcoinChart').getContext('2d');
+    <h1>Prix des Cryptomonnaies en Direct</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Symbol</th>
+                <th>Prix (USD)</th>
+            </tr>
+        </thead>
+        <tbody id="cryptoTable">
+            <tr>
+                <td>Bitcoin</td>
+                <td>BTC</td>
+                <td id="btc-price">Chargement...</td>
+            </tr>
+            <tr>
+                <td>Ethereum</td>
+                <td>ETH</td>
+                <td id="eth-price">Chargement...</td>
+            </tr>
+            <tr>
+                <td>Dogecoin</td>
+                <td>DOGE</td>
+                <td id="doge-price">Chargement...</td>
+            </tr>
+        </tbody>
+    </table>
 
-        // Récupérer les données de l'API
-        async function fetchBitcoinData() {
-            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
-            const data = await response.json();
-            return data.bitcoin.usd; // Retourne le prix en USD
+    <script>
+        // Variables pour stocker les anciens prix
+        let previousPrices = {
+            bitcoin: null,
+            ethereum: null,
+            dogecoin: null
+        };
+
+        // Fonction pour récupérer les prix des cryptomonnaies
+        async function fetchCryptoPrices() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd');
+                const data = await response.json();
+
+                // Mettre à jour chaque prix avec effet de couleur
+                updatePrice('btc-price', data.bitcoin.usd, 'bitcoin');
+                updatePrice('eth-price', data.ethereum.usd, 'ethereum');
+                updatePrice('doge-price', data.dogecoin.usd, 'dogecoin');
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données :', error);
+            }
         }
 
-        // Initialiser un graphique
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Point 1', 'Point 2', 'Point 3'], // Labels temporaires
-                datasets: [{
-                    label: 'Prix Bitcoin (USD)',
-                    data: [0, 0, 0], // Données temporaires
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
+        // Fonction pour mettre à jour le prix avec effet visuel
+        function updatePrice(elementId, currentPrice, currency) {
+            const priceElement = document.getElementById(elementId);
 
-        // Mettre à jour les données toutes les 5 secondes
-        setInterval(async () => {
-            const latestPrice = await fetchBitcoinData();
-            chart.data.labels.push(new Date().toLocaleTimeString()); // Ajouter un label (heure actuelle)
-            chart.data.datasets[0].data.push(latestPrice); // Ajouter le dernier prix
-            chart.update();
-        }, 5000);
+            // Ajouter un effet de couleur en fonction de la variation
+            if (previousPrices[currency] !== null) {
+                if (currentPrice > previousPrices[currency]) {
+                    priceElement.className = 'up'; // Vert si le prix monte
+                } else if (currentPrice < previousPrices[currency]) {
+                    priceElement.className = 'down'; // Rouge si le prix descend
+                } else {
+                    priceElement.className = ''; // Pas de changement
+                }
+            }
+
+            // Mettre à jour le contenu du tableau
+            priceElement.textContent = `$${currentPrice.toFixed(2)}`;
+
+            // Stocker le prix actuel comme ancien prix
+            previousPrices[currency] = currentPrice;
+        }
+
+        // Récupérer les prix toutes les 10 secondes
+        fetchCryptoPrices();
+        setInterval(fetchCryptoPrices, 10000);
     </script>
 </body>
 </html>
