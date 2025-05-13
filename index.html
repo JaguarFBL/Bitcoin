@@ -1,115 +1,69 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prix des Cryptomonnaies avec Effet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        table {
-            margin: 0 auto;
-            border-collapse: collapse;
-            width: 60%;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-        .up {
-            color: green;
-            font-weight: bold;
-        }
-        .down {
-            color: red;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marchés et Crypto</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .data {
+      font-size: 1.2em;
+      color: #34495e;
+    }
+  </style>
 </head>
 <body>
-    <h1>Prix des Cryptomonnaies en Direct</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>Symbol</th>
-                <th>Prix (USD)</th>
-            </tr>
-        </thead>
-        <tbody id="cryptoTable">
-            <tr>
-                <td>Bitcoin</td>
-                <td>BTC</td>
-                <td id="btc-price">Chargement...</td>
-            </tr>
-            <tr>
-                <td>Ethereum</td>
-                <td>ETH</td>
-                <td id="eth-price">Chargement...</td>
-            </tr>
-            <tr>
-                <td>Dogecoin</td>
-                <td>DOGE</td>
-                <td id="doge-price">Chargement...</td>
-            </tr>
-        </tbody>
-    </table>
+  <h1>Données des marchés financiers et des crypto-monnaies</h1>
 
-    <script>
-        // Variables pour stocker les anciens prix
-        let previousPrices = {
-            bitcoin: null,
-            ethereum: null,
-            dogecoin: null
-        };
+  <!-- Section Crypto-monnaies -->
+  <div class="section">
+    <h2>Crypto-monnaies (en €)</h2>
+    <p class="data">Bitcoin : <span id="btc-value">Chargement...</span></p>
+    <p class="data">Ethereum : <span id="eth-value">Chargement...</span></p>
+  </div>
 
-        // Fonction pour récupérer les prix des cryptomonnaies
-        async function fetchCryptoPrices() {
-            try {
-                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd');
-                const data = await response.json();
+  <!-- Section CAC 40 -->
+  <div class="section">
+    <h2>Indice CAC 40</h2>
+    <p class="data">Valeur : 7350.40 points</p>
+    <p class="data">Variation : +0.45%</p>
+  </div>
 
-                // Mettre à jour chaque prix avec effet de couleur
-                updatePrice('btc-price', data.bitcoin.usd, 'bitcoin');
-                updatePrice('eth-price', data.ethereum.usd, 'ethereum');
-                updatePrice('doge-price', data.dogecoin.usd, 'dogecoin');
-            } catch (error) {
-                console.error('Erreur lors de la récupération des données :', error);
-            }
-        }
+  <!-- Section Bourse Américaine -->
+  <div class="section">
+    <h2>Bourse Américaine</h2>
+    <p class="data">Dow Jones : 33900.50 points</p>
+    <p class="data">Variation : -0.15%</p>
+  </div>
 
-        // Fonction pour mettre à jour le prix avec effet visuel
-        function updatePrice(elementId, currentPrice, currency) {
-            const priceElement = document.getElementById(elementId);
+  <script>
+    // Fonction pour récupérer les données des crypto-monnaies
+    async function fetchCryptoData() {
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eur');
+        const data = await response.json();
 
-            // Ajouter un effet de couleur en fonction de la variation
-            if (previousPrices[currency] !== null) {
-                if (currentPrice > previousPrices[currency]) {
-                    priceElement.className = 'up'; // Vert si le prix monte
-                } else if (currentPrice < previousPrices[currency]) {
-                    priceElement.className = 'down'; // Rouge si le prix descend
-                } else {
-                    priceElement.className = ''; // Pas de changement
-                }
-            }
+        // Mise à jour des valeurs dans la page
+        document.getElementById('btc-value').textContent = `${data.bitcoin.eur} €`;
+        document.getElementById('eth-value').textContent = `${data.ethereum.eur} €`;
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données crypto :', error);
+        document.getElementById('btc-value').textContent = 'Erreur';
+        document.getElementById('eth-value').textContent = 'Erreur';
+      }
+    }
 
-            // Mettre à jour le contenu du tableau
-            priceElement.textContent = `$${currentPrice.toFixed(2)}`;
-
-            // Stocker le prix actuel comme ancien prix
-            previousPrices[currency] = currentPrice;
-        }
-
-        // Récupérer les prix toutes les 10 secondes
-        fetchCryptoPrices();
-        setInterval(fetchCryptoPrices, 10000);
-    </script>
+    // Appel de la fonction pour récupérer les données des crypto-monnaies
+    fetchCryptoData();
+  </script>
 </body>
 </html>
