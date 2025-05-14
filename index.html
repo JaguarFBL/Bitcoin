@@ -3,67 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marchés et Crypto</title>
+  <title>Cours des Cryptomonnaies</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
     }
-    h1, h2 {
-      color: #2c3e50;
+
+    h1 {
+      margin: 20px 0;
+      font-size: 24px;
+      color: #333;
     }
-    .section {
-      margin-bottom: 30px;
+
+    table {
+      margin: 20px auto;
+      width: 80%;
+      border-collapse: collapse;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
-    .data {
-      font-size: 1.2em;
-      color: #34495e;
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .green {
+      color: green;
+    }
+
+    .red {
+      color: red;
+    }
+
+    .loading {
+      font-size: 18px;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <h1>Données des marchés financiers et des crypto-monnaies</h1>
-
-  <!-- Section Crypto-monnaies -->
-  <div class="section">
-    <h2>Crypto-monnaies (en €)</h2>
-    <p class="data">Bitcoin : <span id="btc-value">Chargement...</span></p>
-    <p class="data">Ethereum : <span id="eth-value">Chargement...</span></p>
-  </div>
-
-  <!-- Section CAC 40 -->
-  <div class="section">
-    <h2>Indice CAC 40</h2>
-    <p class="data">Valeur : 7350.40 points</p>
-    <p class="data">Variation : +0.45%</p>
-  </div>
-
-  <!-- Section Bourse Américaine -->
-  <div class="section">
-    <h2>Bourse Américaine</h2>
-    <p class="data">Dow Jones : 33900.50 points</p>
-    <p class="data">Variation : -0.15%</p>
-  </div>
+  <h1>Cours des Cryptomonnaies en Temps Réel</h1>
+  <table id="cryptoTable">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Prix (USD)</th>
+        <th>Variation (24h)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td colspan="3" class="loading">Chargement des données...</td>
+      </tr>
+    </tbody>
+  </table>
 
   <script>
-    // Fonction pour récupérer les données des crypto-monnaies
-    async function fetchCryptoData() {
-      try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eur');
-        const data = await response.json();
+    const API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,cardano,solana,polkadot&vs_currencies=usd&include_24hr_change=true';
 
-        // Mise à jour des valeurs dans la page
-        document.getElementById('btc-value').textContent = `${data.bitcoin.eur} €`;
-        document.getElementById('eth-value').textContent = `${data.ethereum.eur} €`;
-      } catch (error) {
-        console.error('Erreur lors de la récupération des données crypto :', error);
-        document.getElementById('btc-value').textContent = 'Erreur';
-        document.getElementById('eth-value').textContent = 'Erreur';
-      }
+    function fetchCryptoData() {
+      fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.querySelector('#cryptoTable tbody');
+          tableBody.innerHTML = ''; // Réinitialiser le tableau
+
+          Object.keys(data).forEach(crypto => {
+            const price = data[crypto].usd;
+            const change = data[crypto].usd_24h_change;
+            const isPositive = change >= 0;
+
+            // Créer une ligne pour chaque crypto
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${crypto.charAt(0).toUpperCase() + crypto.slice(1)}</td>
+              <td>$${price.toFixed(2)}</td>
+              <td class="${isPositive ? 'green' : 'red'}">
+                ${isPositive ? '⬆' : '⬇'} ${change.toFixed(2)}%
+              </td>
+            `;
+            tableBody.appendChild(row);
+          });
+        })
+        .catch(error => {
+          console.error('Erreur lors de la récupération des données :', error);
+          const tableBody = document.querySelector('#cryptoTable tbody');
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="3" class="red">Erreur de chargement des données</td>
+            </tr>
+          `;
+        });
     }
 
-    // Appel de la fonction pour récupérer les données des crypto-monnaies
-    fetchCryptoData();
+    // Actualisation toutes les 500 millisecondes
+    setInterval(fetchCryptoData, 500);
+    fetchCryptoData(); // Appel initial
   </script>
 </body>
 </html>
